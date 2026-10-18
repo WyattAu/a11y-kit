@@ -1,0 +1,48 @@
+[package]
+name = "a11y-kit"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+authors = ["Wyatt Au <wyatt_au@protonmail.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/WyattAu/a11y-kit"
+homepage = "https://github.com/WyattAu/a11y-kit"
+documentation = "https://docs.rs/a11y-kit"
+description = "Accessibility semantics layer for the estate — platform-free semantic node model (role, name, states, relations), tree audit as a CI gate, AccessKit conversion behind a feature. The layer nobody funds, owned"
+readme = "README.md"
+keywords = ["accessibility", "a11y", "accesskit", "semantics", "no-std"]
+categories = ["accessibility", "no-std"]
+exclude = [".github/", "supply-chain/"]
+
+# Layer model: docs/layers.md in WyattAu/engineering-standards.
+# L1 — substrate: the semantic layer every toolkit lowers *into*
+# (ADR-0004 §2 — AccessKit is the keystone nobody else funds).
+[package.metadata.layers]
+tier = "L1"
+
+[dependencies]
+thiserror = "2"
+# AccessKit transport conversion, opt-in (Wave 2.1 — first toolkit adapter).
+accesskit = { version = "0.25", optional = true }
+
+[features]
+default = []
+# Conversion into AccessKit's transport types. Off by default so the audit
+# layer stays dependency-free and headless; the feature lands with the first
+# toolkit adapter (Wave 2.1).
+accesskit = ["dep:accesskit"]
+
+[lints.rust]
+missing_docs = "deny"
+unsafe_code = "deny"
+
+# Semantics discipline: node models are built from UI code under time
+# pressure; the audit exists so mistakes surface in CI, and the model itself
+# must never panic on a wrong id or a cycle. Test targets lift these at file
+# level with justification.
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+indexing_slicing = "deny"
+undocumented_unsafe_blocks = "deny"
