@@ -129,6 +129,20 @@ pub struct States {
     pub modal: bool,
     /// Checkbox value.
     pub checked: Option<TriState>,
+    /// Busy: the value is transient or not yet settled.
+    ///
+    /// Two callers need this and neither had a way to say it (found by
+    /// composing `input-kit` against this crate, 2026-10-18):
+    ///
+    /// - **IME composition.** A textbox whose value is a half-formed syllable
+    ///   must not have that value announced. `aria-busy` is the signal, and
+    ///   `input-kit`'s `Composer::is_composing` is what drives it.
+    /// - **Async loading.** A textbox whose value is still being fetched should
+    ///   not be announced as empty.
+    ///
+    /// `busy` is distinct from `disabled` and `invalid`: the control is live
+    /// and valid, only its value is not final.
+    pub busy: bool,
 }
 
 /// A relation between nodes (the edges a screen reader traverses).

@@ -136,3 +136,65 @@ fn the_audit_is_deterministic() {
     let tree = good_tree();
     assert_eq!(tree.audit(), tree.audit());
 }
+
+/// A busy textbox is a first-class state, added in 0.2.0.
+///
+/// The gap was found by composing `input-kit` (IME preedit) against this
+/// crate: while an IME is forming a syllable the textbox's value is a
+/// half-formed character, and there was no way to say so. A screen reader
+/// would announce it. `busy` is the ARIA signal.
+#[test]
+fn a_composing_textbox_is_expressible_and_still_audits_clean() {
+    let mut tree = A11yTree::new();
+    let window = tree.push(A11yNode::new(NodeId(0), A11yRole::Window, "Chisel Docs"));
+
+    // The focused field, settled: not composing.
+    let focused = tree.push(
+        A11yNode::new(NodeId(1), A11yRole::Textbox, "Page text")
+            .with_parent(window)
+            .with_states(States { focused: true, ..States::default() }),
+    );
+    // A second field, idle and unfocused. Only one node may be focused per
+    // tree (the audit enforces it), so the composing state is shown on the
+    // focused node below rather than by focusing a second one.
+    let other = tree.push(
+        A11yNode::new(NodeId(2), A11yRole::Textbox, "Search")
+            .with_parent(window),
+    );
+
+    // Busy is an ordinary state: it does not make the tree invalid.
+    let expected = a11y_kit::TreeAudit {
+        nodes: 3,
+        roots: 1,
+        interactive: 2,
+        relations: 0,
+    };
+    assert_eq!(tree.audit(), Ok(expected));
+
+    // Now the focused field starts an IME composition. This is the transition
+    // the 0.1.0 model could not express.
+    let composing = States {
+        focused: true,
+        busy: true,
+        ..States::default()
+    };
+    assert!(composing.busy);
+    assert!(composing.focused);
+    assert!(!composing.disabled, "busy is not disabled");
+    assert!(!composing.invalid, "busy is not invalid");
+    assert!(!composing.hidden, "busy is not hidden");
+
+    // It differs from the settled state in exactly one flag, so a screen
+    // reader is told "value is not final" without being told the control is
+    // unusable.
+    let settled = tree.get(focused).expect("node is in the tree").states;
+    assert!(!settled.busy);
+    assert_ne!(settled, composing);
+    assert!(
+        settled.busy ^ composing.busy,
+        "composing is exactly the settled state plus busy"
+    );
+
+    // And an unfocused textbox stays unsettable from `busy` alone.
+    assert!(!tree.get(other).expect("node is in the tree").states.busy);
+}

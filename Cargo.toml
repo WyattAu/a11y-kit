@@ -1,6 +1,10 @@
 [package]
 name = "a11y-kit"
-version = "0.1.0"
+# 0.2.0 adds `States::busy`. Adding a public field breaks exhaustive struct
+# literals, so this is a minor bump, not a patch. Found by composing
+# `input-kit` against this crate: a textbox mid-IME-composition had no
+# expressible state.
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.85"
 authors = ["Wyatt Au <wyatt_au@protonmail.com>"]
