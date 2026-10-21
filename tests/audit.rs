@@ -8,9 +8,7 @@
     clippy::panic
 )]
 
-use a11y_kit::{
-    A11yNode, A11yRole, A11yTree, AuditError, NodeId, Relation, States, TriState,
-};
+use a11y_kit::{A11yNode, A11yRole, A11yTree, AuditError, NodeId, Relation, States, TriState};
 
 fn good_tree() -> A11yTree {
     let mut tree = A11yTree::new();
@@ -18,7 +16,10 @@ fn good_tree() -> A11yTree {
     let toolbar = tree.push(
         A11yNode::new(NodeId(1), A11yRole::Toolbar, "Tool palette")
             .with_parent(window)
-            .with_states(States { focused: true, ..States::default() }),
+            .with_states(States {
+                focused: true,
+                ..States::default()
+            }),
     );
     tree.push(
         A11yNode::new(NodeId(2), A11yRole::Button, "Save document")
@@ -39,7 +40,9 @@ fn good_tree() -> A11yTree {
 
 #[test]
 fn a_well_formed_tree_passes_with_counts() {
-    let audit = good_tree().audit().expect("the estate's own example tree is well-formed");
+    let audit = good_tree()
+        .audit()
+        .expect("the estate's own example tree is well-formed");
     assert_eq!(audit.nodes, 5);
     assert_eq!(audit.roots, 1);
     assert_eq!(audit.interactive, 2);
@@ -49,7 +52,8 @@ fn a_well_formed_tree_passes_with_counts() {
 #[test]
 fn interactive_roles_must_be_named() {
     let mut tree = good_tree();
-    tree.push(A11yNode::new(NodeId(5), A11yRole::Button, "   ").with_parent(NodeId(0)));    assert_eq!(
+    tree.push(A11yNode::new(NodeId(5), A11yRole::Button, "   ").with_parent(NodeId(0)));
+    assert_eq!(
         tree.audit(),
         Err(AuditError::MissingAccessibleName(NodeId(5))),
         "a whitespace name is no name"
@@ -69,7 +73,10 @@ fn dangling_parents_and_relations_are_caught() {
     tree.insert(A11yNode::new(NodeId(9), A11yRole::Group, "Orphan").with_parent(NodeId(42)));
     assert_eq!(
         tree.audit(),
-        Err(AuditError::DanglingReference { node: NodeId(9), target: NodeId(42) })
+        Err(AuditError::DanglingReference {
+            node: NodeId(9),
+            target: NodeId(42)
+        })
     );
 
     let mut tree2 = good_tree();
@@ -80,7 +87,10 @@ fn dangling_parents_and_relations_are_caught() {
     );
     assert_eq!(
         tree2.audit(),
-        Err(AuditError::DanglingReference { node: NodeId(8), target: NodeId(77) })
+        Err(AuditError::DanglingReference {
+            node: NodeId(8),
+            target: NodeId(77)
+        })
     );
 }
 
@@ -105,9 +115,15 @@ fn focus_discipline_is_enforced() {
     tree.insert(
         A11yNode::new(NodeId(6), A11yRole::Button, "Print")
             .with_parent(NodeId(0))
-            .with_states(States { focused: true, ..States::default() }),
+            .with_states(States {
+                focused: true,
+                ..States::default()
+            }),
     );
-    assert_eq!(tree.audit(), Err(AuditError::MultipleFocus(vec![NodeId(1), NodeId(6)])));
+    assert_eq!(
+        tree.audit(),
+        Err(AuditError::MultipleFocus(vec![NodeId(1), NodeId(6)]))
+    );
 }
 
 #[test]
@@ -117,8 +133,10 @@ fn a_focused_orphan_is_caught() {
     // A focusable node that is not parented under the root at all — the
     // classic "focused thing is invisible to the screen reader" bug.
     let orphan = tree.insert(
-        A11yNode::new(NodeId(1), A11yRole::Textbox, "Search")
-            .with_states(States { focused: true, ..States::default() }),
+        A11yNode::new(NodeId(1), A11yRole::Textbox, "Search").with_states(States {
+            focused: true,
+            ..States::default()
+        }),
     );
     assert_eq!(tree.audit(), Err(AuditError::UnreachableFocus(orphan)));
 }
@@ -127,7 +145,11 @@ fn a_focused_orphan_is_caught() {
 fn reachability_walks_from_the_roots() {
     let tree = good_tree();
     let reachable = tree.reachable_from_roots();
-    assert_eq!(reachable.len(), 5, "every node in the estate example is reachable");
+    assert_eq!(
+        reachable.len(),
+        5,
+        "every node in the estate example is reachable"
+    );
     assert!(reachable.contains(&NodeId(4)));
 }
 
@@ -152,15 +174,16 @@ fn a_composing_textbox_is_expressible_and_still_audits_clean() {
     let focused = tree.push(
         A11yNode::new(NodeId(1), A11yRole::Textbox, "Page text")
             .with_parent(window)
-            .with_states(States { focused: true, ..States::default() }),
+            .with_states(States {
+                focused: true,
+                ..States::default()
+            }),
     );
     // A second field, idle and unfocused. Only one node may be focused per
     // tree (the audit enforces it), so the composing state is shown on the
     // focused node below rather than by focusing a second one.
-    let other = tree.push(
-        A11yNode::new(NodeId(2), A11yRole::Textbox, "Search")
-            .with_parent(window),
-    );
+    let other =
+        tree.push(A11yNode::new(NodeId(2), A11yRole::Textbox, "Search").with_parent(window));
 
     // Busy is an ordinary state: it does not make the tree invalid.
     let expected = a11y_kit::TreeAudit {
