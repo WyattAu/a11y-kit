@@ -4,7 +4,7 @@ name = "a11y-kit"
 # literals, so this is a minor bump, not a patch. Found by composing
 # `input-kit` against this crate: a textbox mid-IME-composition had no
 # expressible state.
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 rust-version = "1.85"
 authors = ["Wyatt Au <wyatt_au@protonmail.com>"]
@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/WyattAu/a11y-kit"
 homepage = "https://github.com/WyattAu/a11y-kit"
 documentation = "https://docs.rs/a11y-kit"
-description = "Accessibility semantics layer for the estate — platform-free semantic node model (role, name, states, relations), tree audit as a CI gate, AccessKit conversion behind a feature. The layer nobody funds, owned"
+description = "Accessibility semantics layer for the estate: platform-free semantic node model (role, name, states, relations), tree audit as a CI gate, AccessKit conversion behind a feature. The layer nobody funds, owned"
 readme = "README.md"
 keywords = ["accessibility", "a11y", "accesskit", "semantics", "no-std"]
 categories = ["accessibility", "no-std"]
